@@ -72,6 +72,13 @@ flags.mark_flag_as_required("width")
 flags.mark_flag_as_required("height")
 
 
+def get_nvidia_gpu_name():
+    import subprocess
+    output = subprocess.check_output(
+        ["nvidia-smi", "--query-gpu=gpu_name", "--format=csv,noheader"])
+    return output.decode("utf-8").strip().split('\n')
+
+
 def preprocess(images, test_size):
     """
     Preprocess images for YOLOX inference.
@@ -258,8 +265,9 @@ def profile_model_latency(model_name,
     Returns:
         Dictionary with p10, p50, and p90 latency statistics in milliseconds
     """
+    gpu_name = get_nvidia_gpu_name()[0]
     print(
-        f"Profiling {model_name} with batchsize={batchsize}, width={width}, height={height}"
+        f"Profiling {model_name} with batchsize={batchsize}, width={width}, height={height}, gpu={gpu_name}"
     )
 
     # Use the maximum of width and height for the model's resolution parameter
@@ -340,7 +348,8 @@ def profile_model_latency(model_name,
             "p50": float(p50),
             "p90": float(p90)
         },
-        "num_iterations": measure_iters
+        "num_iterations": measure_iters,
+        "gpu_name": gpu_name
     }
 
 
